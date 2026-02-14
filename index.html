@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Particle Size Check System: Interactive Design Spec</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Highlight.js for Code Syntax -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+
+    <!-- Google Fonts: Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Chosen Palette: Warm Industrial Neutrals -->
+    <!-- Background: #F9FAFB (Cool Gray 50) -->
+    <!-- Primary: #374151 (Gray 700) -->
+    <!-- Accent 1: #2563EB (Blue 600) -->
+    <!-- Accent 2: #D97706 (Amber 600) -->
+    <!-- Accent 3: #059669 (Emerald 600) -->
+    <!-- Accent 4: #DC2626 (Red 600) -->
+
+    <!-- Application Structure Plan: 
+         1. Header: System Identity.
+         2. Navigation: Tabs including NEW Technical Code.
+         3. Content Areas:
+            - Overview, Full Spec, Simulator, Database, Time Analysis, Variables.
+            - NEW: Technical Code & Tools (Stack analysis & Code patterns).
+    -->
+
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* Chart Container Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8; 
+        }
+
+        .tab-active {
+            border-bottom: 3px solid #2563EB;
+            color: #2563EB;
+            font-weight: 600;
+        }
+        
+        .tab-inactive {
+            color: #6B7280;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-inactive:hover {
+            color: #374151;
+            border-bottom: 3px solid #E5E7EB;
+        }
+
+        /* Flowchart Styles */
+        .flow-line {
+            width: 2px;
+            background-color: #9CA3AF;
+            height: 20px;
+        }
+        .flow-box {
+            position: relative;
+            z-index: 10;
+        }
+
+        .db-flag {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .spec-section {
+            @apply border-l-4 border-blue-500 pl-4 py-2 mb-6 bg-white rounded-r-lg shadow-sm;
+        }
+        .spec-title {
+            @apply font-bold text-lg text-gray-800 mb-2;
+        }
+        .spec-content {
+            @apply text-sm text-gray-600 space-y-2;
+        }
+        
+        .time-card {
+            @apply bg-white p-4 rounded-lg shadow-sm border border-gray-200 text-center;
+        }
+        .time-val {
+            @apply text-2xl font-bold text-blue-600 my-2;
+        }
+        .time-label {
+            @apply text-sm text-gray-500 font-medium uppercase;
+        }
+
+        /* Code Block Styling */
+        pre {
+            background: #282c34;
+            color: #e0e0e0; /* Added explicit text color for visibility */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+        }
+        code {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+        }
+
+        /* Popup Modal Animation */
+        .modal-enter {
+            animation: modalFadeIn 0.3s ease-out forwards;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="text-gray-800 flex flex-col min-h-screen">
+
+    <!-- POPUP MODAL (Hidden by default) -->
+    <div id="onsite-popup-overlay" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999] hidden backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 font-sarabun relative mx-4 modal-enter border border-gray-100">
+            <!-- Header -->
+            <div class="text-gray-500 text-sm mb-1 font-medium">หน้าต่างแจ้งเตือน</div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-5 tracking-tight">
+                เช็คเม็ดลอดเครื่องบดไลน์ <span id="popup-line-name" class="text-gray-900">HM4</span>
+            </h2>
+            <!-- Image Area -->
+            <div class="bg-gray-100 rounded-2xl aspect-[4/3] flex flex-col items-center justify-center mb-6 border border-gray-200 shadow-inner relative overflow-hidden group">
+                <div id="popup-img-placeholder" class="flex flex-col items-center justify-center transition-opacity duration-500">
+                    <i class="fas fa-camera text-5xl text-gray-300 mb-3 group-hover:scale-110 transition-transform"></i>
+                    <span class="text-gray-400 text-sm font-medium">Waiting for Camera Stream...</span>
+                </div>
+                <img id="popup-real-img" src="https://placehold.co/600x400/2563EB/FFFFFF?text=Captured+Particle+Image" class="absolute inset-0 w-full h-full object-cover hidden" alt="Captured Image">
+            </div>
+            <!-- Analysis Result -->
+            <div class="mb-1 text-gray-500 text-sm font-medium">ผลการวิเคราะห์:</div>
+            <div id="popup-status-main" class="text-4xl font-bold text-green-500 mb-6">ปกติ</div>
+            <!-- Stats Grid -->
+            <div class="flex justify-between items-end mb-8 border-t border-gray-100 pt-5">
+                <div>
+                    <div class="text-gray-500 text-sm mb-1 font-medium">% วัตถุดิบติดตะแกรง</div>
+                    <div id="popup-percent-val" class="text-4xl font-bold text-gray-900 tracking-tight">3.31%</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-gray-500 text-sm mb-1 font-medium">Status</div>
+                    <div id="popup-status-sub" class="text-2xl font-bold text-green-500">Pass</div>
+                </div>
+            </div>
+            <!-- Close Button -->
+            <button onclick="closePopup()" class="w-full bg-[#0078D7] hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-lg transition-all shadow-lg shadow-blue-200 active:scale-95">
+                ปิดหน้าต่าง
+            </button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 text-white p-2 rounded-lg">
+                    <i class="fas fa-microscope fa-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 leading-tight">Particle Size Check System</h1>
+                    <p class="text-sm text-gray-500">System Design Specification (HM4, HM5, HM6)</p>
+                </div>
+            </div>
+            <div class="hidden md:block text-right text-xs text-gray-400">
+                <p>Status: Production Ready</p>
+                <p>Ver: 7.1 (Code Contrast Fix)</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation -->
+    <nav class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-6 overflow-x-auto">
+                <button onclick="switchTab('overview')" id="tab-overview" class="tab-active py-3 px-2 focus:outline-none transition-colors whitespace-nowrap">
+                    <i class="fas fa-info-circle mr-2"></i>ภาพรวม
+                </button>
+                <button onclick="switchTab('fullspec')" id="tab-fullspec" class="tab-inactive py-3 px-2 focus:outline-none transition-colors whitespace-nowrap">
+                    <i class="fas fa-file-alt mr-2"></i>สเปคระบบ
+                </button>
+                <button onclick="switchTab('technical')" id="tab-technical" class="tab-inactive py-3 px-2 focus:outline-none transition-colors whitespace-nowrap">
+                    <i class="fas fa-code mr-2"></i>Technical Code & Tools
+                </button>
+                <button onclick="switchTab('variables')" id="tab-variables" class="tab-inactive py-3 px-2 focus:outline-none transition-colors whitespace-nowrap">
+                    <i class="fas fa-book mr-2"></i>พจนานุกรมตัวแปร
+                </button>
+                <button onclick="switchTab('simulator')" id="tab-simulator" class="tab-inactive py-3 px-2 focus:outline-none transition-colors whitespace-nowrap">
+                    <i class="fas fa-play-circle mr-2"></i>จำลองการทำงาน
+                </button>
+                <button onclick="switchTab('database')" id="tab-database" class="tab-inactive py-3 px-2 focus:outline-none transition-colors whitespace-nowrap">
+                    <i class="fas fa-database mr-2"></i>โครงสร้างข้อมูล
+                </button>
+                <button onclick="switchTab('timeanalysis')" id="tab-timeanalysis" class="tab-inactive py-3 px-2 focus:outline-none transition-colors whitespace-nowrap">
+                    <i class="fas fa-stopwatch mr-2"></i>วิเคราะห์เวลา
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+
+        <!-- SECTION 1: OVERVIEW & FLOWCHART -->
+        <section id="view-overview" class="space-y-8 animate-fade-in">
+            <!-- Intro Card -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-blue-500 pl-3">บทนำ (Introduction)</h2>
+                <p class="text-gray-600 leading-relaxed">
+                    ระบบตรวจสอบขนาดอนุภาค (Particle Size Check System) ออกแบบมาเพื่อควบคุมคุณภาพไลน์ HM4, HM5, HM6 โดยเน้นการทำงานแบบ Concurrency, Atomic Write, และ Logging อย่างละเอียด 
+                    <span class="text-green-600 font-semibold">(Updated: เพิ่มการปรับจูนประสิทธิภาพขั้นสูง 4 ด้าน: Database I/O, Memory/Image, Network Resilience, File Concurrency)</span>
+                </p>
+            </div>
+
+            <!-- Flowchart Section -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-6 border-b pb-2 flex items-center">
+                    <i class="fas fa-project-diagram mr-2 text-blue-500"></i> แผนผังการทำงาน (System Flowchart)
+                </h3>
+                <div class="flex flex-col items-center w-full max-w-4xl mx-auto">
+                    
+                    <!-- Start Node -->
+                    <div class="flow-box bg-blue-100 text-blue-800 px-8 py-3 rounded-full font-bold border-2 border-blue-500 shadow-md">
+                        Start: JobStatus 0 &rarr; 1 (Check Keep-Alive)
+                    </div>
+                    <div class="flow-line"></div>
+                    <i class="fas fa-chevron-down text-gray-400 mb-2"></i>
+
+                    <!-- Wait State -->
+                    <div class="flow-box bg-white px-6 py-3 rounded-lg shadow-sm border border-gray-300 w-64 text-center">
+                        <div class="font-bold text-gray-700">Wait 600s</div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            Use Time Delta<br>(Now - StartTime)
+                        </div>
+                    </div>
+                    <div class="flow-line"></div>
+                    <i class="fas fa-chevron-down text-gray-400 mb-2"></i>
+
+                    <!-- C# Actions Group -->
+                    <div class="w-full border-2 border-dashed border-gray-300 p-6 rounded-xl bg-gray-50 relative">
+                        <div class="absolute -top-3 left-4 bg-blue-50 text-blue-600 px-3 py-0.5 rounded-full text-xs font-bold border border-blue-200">
+                            C# Hardware Control (Verified Writes)
+                        </div>
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <!-- Step 1 -->
+                            <div class="bg-yellow-50 text-yellow-900 p-4 rounded-lg border border-yellow-200 shadow-sm w-full text-center relative">
+                                <div class="text-2xl mb-2 text-yellow-500"><i class="fas fa-lightbulb"></i></div>
+                                <div class="font-bold text-sm">1. Open Light</div>
+                                <div class="text-xs text-gray-500">StatusLightOpen = 1</div>
+                            </div>
+                            <i class="fas fa-arrow-right hidden md:block text-gray-300"></i>
+                            <i class="fas fa-arrow-down md:hidden text-gray-300"></i>
+                            
+                            <!-- Step 2 -->
+                            <div class="bg-yellow-50 text-yellow-900 p-4 rounded-lg border border-yellow-200 shadow-sm w-full text-center relative">
+                                <div class="text-2xl mb-2 text-yellow-500"><i class="fas fa-vial"></i></div>
+                                <div class="font-bold text-sm">2. Sampling</div>
+                                <div class="text-xs text-gray-500">Tag=1 (3s) &rarr; Tag=0 (5s)<br>(Time Delta Loops)</div>
+                            </div>
+                            <i class="fas fa-arrow-right hidden md:block text-gray-300"></i>
+                            <i class="fas fa-arrow-down md:hidden text-gray-300"></i>
+
+                            <!-- Step 3 -->
+                            <div class="bg-yellow-50 text-yellow-900 p-4 rounded-lg border border-yellow-200 shadow-sm w-full text-center relative">
+                                <div class="text-2xl mb-2 text-yellow-500"><i class="fas fa-wave-square"></i></div>
+                                <div class="font-bold text-sm">3. Vibrate</div>
+                                <div class="text-xs text-gray-500">Tag=1 (60-120s)<br>(Time Delta)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-line"></div>
+                    <i class="fas fa-chevron-down text-gray-400 mb-2"></i>
+
+                    <!-- Python Action -->
+                    <div class="flow-box bg-green-50 text-green-900 px-6 py-4 rounded-lg shadow-sm border-l-4 border-green-500 w-full max-w-md text-left flex items-start gap-3">
+                        <div class="text-green-600 mt-1"><i class="fas fa-camera fa-lg"></i></div>
+                        <div>
+                            <div class="font-bold">Python: Capture & Save</div>
+                            <div class="text-xs text-gray-600 mt-1">
+                                Streaming Save (No Memory Leak)<br>
+                                Unique Filename (Timestamp)<br>
+                                <span class="text-red-600 font-bold">Error: Update StatusError=1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-line"></div>
+                    <i class="fas fa-chevron-down text-gray-400 mb-2"></i>
+
+                    <!-- C# Save Action -->
+                    <div class="flow-box bg-blue-50 text-blue-900 px-6 py-4 rounded-lg shadow-sm border-l-4 border-blue-500 w-full max-w-md text-left flex items-start gap-3">
+                        <div class="text-blue-600 mt-1"><i class="fas fa-hdd fa-lg"></i></div>
+                        <div>
+                            <div class="font-bold">C#: Check Result</div>
+                            <div class="text-xs text-gray-600 mt-1">
+                                If Success: Atomic Save (Stream)<br>
+                                <span class="text-red-600 font-bold">If Error: Alarm & Reset</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flow-line h-8"></div>
+                    <i class="fas fa-chevron-down text-gray-400 mb-2"></i>
+
+                    <!-- Cleaning -->
+                    <div class="w-full border-2 border-dashed border-red-200 p-4 rounded-xl bg-red-50 text-center">
+                        <div class="font-bold text-red-800 mb-2"><i class="fas fa-broom mr-2"></i>Cleaning Process (Start when Job Ends/Status=0)</div>
+                        <div class="flex flex-col items-center">
+                             <div class="text-xs text-gray-600 mb-2">Tray 1 (5s) &rarr; Tray 2 (5s)<br>(Time Delta Loops)</div>
+                             <div class="text-xs text-blue-600 font-bold mb-2">Turn Light OFF</div>
+                             <div class="bg-gray-800 text-white px-6 py-2 rounded-full font-bold text-sm shadow-md mt-2">
+                                End: Reset All Flags = 0
+                             </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: VARIABLES DICTIONARY -->
+        <section id="view-variables" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 border-l-4 border-purple-500 pl-3">พจนานุกรมตัวแปร (Variable Dictionary)</h2>
+                <p class="text-gray-600 mb-4">
+                    ตารางแสดงรายการตัวแปรสำคัญที่ใช้ในการเขียนโปรแกรม C# เพื่อควบคุม Flow และการเชื่อมต่อข้อมูล
+                </p>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-100 text-gray-700 uppercase font-bold text-xs">
+                            <tr>
+                                <th class="px-4 py-3">ชื่อตัวแปร (Variable Name)</th>
+                                <th class="px-4 py-3">ประเภท (Type)</th>
+                                <th class="px-4 py-3">แหล่งที่มา (Source)</th>
+                                <th class="px-4 py-3">นำไปใช้ที่ (Usage)</th>
+                                <th class="px-4 py-3">คำอธิบาย (Description)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white">
+                            <!-- Group: Kepware Inputs -->
+                            <tr class="bg-blue-50"><td colspan="5" class="px-4 py-2 font-bold text-blue-800">1. ข้อมูลนำเข้าจาก Kepware (Inputs)</td></tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-blue-600">JobStatusHM[x]</td>
+                                <td class="px-4 py-3">Integer (0/1)</td>
+                                <td class="px-4 py-3">Kepware Tag</td>
+                                <td class="px-4 py-3">C# Logic Loop</td>
+                                <td class="px-4 py-3">สถานะการทำงานของเครื่อง (0=Stop, 1=Run) ใช้ Trigger เริ่ม Flow</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-blue-600">IngredientNameHM[x]</td>
+                                <td class="px-4 py-3">String</td>
+                                <td class="px-4 py-3">Kepware Tag</td>
+                                <td class="px-4 py-3">C# Variable -> DB</td>
+                                <td class="px-4 py-3">ชื่อวัตถุดิบ เก็บไว้ใช้ใน Report</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-blue-600">JobIdFromKepware</td>
+                                <td class="px-4 py-3">String</td>
+                                <td class="px-4 py-3">Kepware Tag</td>
+                                <td class="px-4 py-3">C# Variable -> DB</td>
+                                <td class="px-4 py-3">รหัส Job จาก PLC อ่านเมื่อ JobStatus=1</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-blue-600">KeepAliveBit</td>
+                                <td class="px-4 py-3">Bit (0/1)</td>
+                                <td class="px-4 py-3">Kepware Tag</td>
+                                <td class="px-4 py-3">C# Heartbeat Check</td>
+                                <td class="px-4 py-3">สัญญาณชีพจาก PLC ต้องมีการเปลี่ยนแปลงตลอดเวลา</td>
+                            </tr>
+
+                            <!-- Group: Internal Logic Variables -->
+                            <tr class="bg-purple-50"><td colspan="5" class="px-4 py-2 font-bold text-purple-800">2. ตัวแปรภายในโปรแกรม C# (Internal Logic)</td></tr>
+                            <tr class="border-l-4 border-red-500 bg-red-50">
+                                <td class="px-4 py-3 font-mono text-red-700 font-bold">_currentJobId</td>
+                                <td class="px-4 py-3">String (Global/Class Field)</td>
+                                <td class="px-4 py-3">Assign จาก JobIdFromKepware</td>
+                                <td class="px-4 py-3">SQL WHERE Clause</td>
+                                <td class="px-4 py-3 font-bold">ตัวแปรสำคัญ! ต้องจำค่าไว้ตลอดจนจบ Job ใช้เช็ค Consistency ก่อน Update DB ทุกครั้ง</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-purple-600">_startTime</td>
+                                <td class="px-4 py-3">DateTime</td>
+                                <td class="px-4 py-3">C# DateTime.UtcNow</td>
+                                <td class="px-4 py-3">Time Delta Calc</td>
+                                <td class="px-4 py-3 font-bold">จุดเวลาเริ่มต้นสำหรับการคำนวณ Time Delta (แทนการใช้ countTimeStartCheck แบบ int)</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-purple-600">_isProcessRunning</td>
+                                <td class="px-4 py-3">Boolean</td>
+                                <td class="px-4 py-3">C# Logic</td>
+                                <td class="px-4 py-3">Flow Control</td>
+                                <td class="px-4 py-3">Flag ป้องกันการรัน Thread ซ้อนทับกัน (Re-entry Guard)</td>
+                            </tr>
+
+                            <!-- Group: DB Columns (Used as Variables in SQL) -->
+                            <tr class="bg-green-50"><td colspan="5" class="px-4 py-2 font-bold text-green-800">3. ตัวแปรที่ใช้สื่อสารผ่าน Database (DB Flags)</td></tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-green-600">StatusCountStart_FromC#</td>
+                                <td class="px-4 py-3">Bit (0/1)</td>
+                                <td class="px-4 py-3">C# Update</td>
+                                <td class="px-4 py-3">Python Read</td>
+                                <td class="px-4 py-3">บอกว่านับเวลาครบ 600s แล้ว</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-green-600">StatusLightOpen_FromC#</td>
+                                <td class="px-4 py-3">Bit (0/1)</td>
+                                <td class="px-4 py-3">C# Update</td>
+                                <td class="px-4 py-3">Python Read</td>
+                                <td class="px-4 py-3">บอกว่าไฟเปิดแล้ว</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-green-600">StatusSamplingPass_FromC#</td>
+                                <td class="px-4 py-3">Bit (0/1)</td>
+                                <td class="px-4 py-3">C# Update</td>
+                                <td class="px-4 py-3">Python Read</td>
+                                <td class="px-4 py-3">บอกว่า Sampling เสร็จแล้ว (3 Loops)</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-green-600">StatusVibratePass_FromC#</td>
+                                <td class="px-4 py-3">Bit (0/1)</td>
+                                <td class="px-4 py-3">C# Update</td>
+                                <td class="px-4 py-3">Python Read</td>
+                                <td class="px-4 py-3">บอกว่าสั่นเสร็จแล้ว (พร้อมถ่ายรูป)</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 font-mono text-green-600">StatusSaveImageSuccess...</td>
+                                <td class="px-4 py-3">Bit (0/1)</td>
+                                <td class="px-4 py-3">Python Update</td>
+                                <td class="px-4 py-3">C# Read</td>
+                                <td class="px-4 py-3">Python บอก C# ว่าถ่ายรูปและ Save ลง DB เสร็จแล้ว</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: FULL SPECIFICATION (TEXT) -->
+        <section id="view-fullspec" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">รายละเอียดข้อกำหนดระบบ (Detailed Specification)</h2>
+                
+                <div class="spec-section">
+                    <h3 class="spec-title">ข้อกำหนดพื้นฐานและความเสถียร (Core Stability)</h3>
+                    <div class="spec-content">
+                        <ul class="list-disc pl-5">
+                            <li><strong>Concurrency & Precision Timing:</strong>
+                                <ul class="pl-4">
+                                    <li>- ห้ามใช้ <code>Thread.Sleep</code> หรือ <code>Task.Delay</code> แบบตรงๆ เพื่อจับเวลาเพราะอาจเกิด Time Drift</li>
+                                    <li>- <strong>ต้องใช้ Time Delta Calculation:</strong> จดจำเวลาเริ่ม (<code>DateTime.UtcNow</code>) แล้ววน Loop เช็คผลต่างเวลา (<code>elapsed = Now - Start</code>) ร่วมกับ <code>await Task.Delay(10-100ms)</code> เพื่อคืน Thread ให้ CPU</li>
+                                </ul>
+                            </li>
+                            <li><strong>Atomic Write:</strong> บันทึกไฟล์แบบ <code>.tmp</code> แล้ว Rename เพื่อป้องกันไฟล์เสีย</li>
+                            <li><strong>Database Retry Policy:</strong> ทุกการเชื่อมต่อ DB ต้องมี Retry Logic (ลองใหม่ 3 ครั้ง ห่างกัน 500ms) หากเชื่อมต่อล้มเหลว</li>
+                            <li><strong>Resource Management:</strong>
+                                <ul class="pl-4">
+                                    <li>- แยก Thread การทำงานของแต่ละไลน์ (HM4, HM5, HM6) ออกจากกันอย่างอิสระ</li>
+                                    <li>- การเขียนไฟล์ลง Disk ต้องมีการ Handle Exception (File in use) และ Retry เสมอ</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="spec-section border-yellow-500 bg-yellow-50">
+                    <h3 class="spec-title text-yellow-800"><i class="fas fa-tachometer-alt mr-2"></i>Advanced Performance & Stability Tuning <span class="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">New</span></h3>
+                    <div class="spec-content text-gray-700">
+                        <p class="mb-2">ข้อกำหนดเพิ่มเติมเพื่อประสิทธิภาพสูงสุด (High Performance) และความเสถียรระดับ Production Grade:</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-3 rounded border border-yellow-200">
+                                <h4 class="font-bold text-sm text-gray-800 mb-1">1. Database Optimization (ลดคอขวด DB)</h4>
+                                <ul class="list-disc pl-4 text-xs">
+                                    <li><strong>เทคนิค:</strong> ใช้ <code>SqlDependency</code> หรือ Query Notifications แทนการ Polling ถี่ๆ ทุก 1 วินาที</li>
+                                    <li><strong>เครื่องมือ:</strong> SQL Server Broker Service</li>
+                                    <li><strong>การปรับปรุง:</strong> ทำ Indexing บน Column ที่ใช้ใน WHERE Clause บ่อยๆ (<code>LineId</code>, <code>JobId</code>, <code>Status...</code>)</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-3 rounded border border-yellow-200">
+                                <h4 class="font-bold text-sm text-gray-800 mb-1">2. Memory & Image Resource (ลด Memory Leak)</h4>
+                                <ul class="list-disc pl-4 text-xs">
+                                    <li><strong>เทคนิค:</strong> ใช้ <code>Stream Processing</code> อ่าน/เขียนข้อมูลภาพแบบ Streaming แทนการโหลดทั้งก้อน (Byte Array) เข้า RAM</li>
+                                    <li><strong>ทางเลือก:</strong> พิจารณาใช้ Shared Folder (SMB/NFS) เก็บไฟล์ภาพแทนการฝากไว้ใน DB (BLOB) หากไฟล์มีขนาดใหญ่มาก เพื่อลดภาระ DB I/O</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-3 rounded border border-yellow-200">
+                                <h4 class="font-bold text-sm text-gray-800 mb-1">3. Network Tolerance (ความทนทานต่อเน็ตเวิร์ก)</h4>
+                                <ul class="list-disc pl-4 text-xs">
+                                    <li><strong>เทคนิค:</strong> Keep-Alive / Heartbeat Check</li>
+                                    <li><strong>รายละเอียด:</strong> สร้าง Tag <code>Heartbeat</code> บน PLC ที่สลับค่า 0/1 ทุกวินาที ให้ C# คอยตรวจสอบ หากค่านิ่งเกิน 5 วินาที ให้แจ้งเตือน "Connection Lost" และหยุด Process ทันที (Safe State)</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-3 rounded border border-yellow-200">
+                                <h4 class="font-bold text-sm text-gray-800 mb-1">4. File Concurrency & Integrity (ป้องกันไฟล์ชนกัน)</h4>
+                                <ul class="list-disc pl-4 text-xs">
+                                    <li><strong>เทคนิค:</strong> Unique Identifier / Timestamping</li>
+                                    <li><strong>รายละเอียด:</strong> การตั้งชื่อไฟล์ภาพ <strong>ห้าม</strong> ใช้แค่ JobId เดิมซ้ำๆ ให้ต่อท้ายด้วย Timestamp หรือ GUID เสมอ (เช่น <code>HM4_Job001_20231027_123005_A1B2.jpg</code>) เพื่อป้องกันการเขียนทับกรณี Reset ระบบแล้วรันใหม่</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spec-section">
+                    <h3 class="spec-title">ส่วนที่ 1: การจัดการระบบ C# และ Hardware Control</h3>
+                    <div class="spec-content">
+                        <h4 class="font-bold mt-4 text-gray-700">1.1 การดึงข้อมูล (Polling Loop 2 วินาที)</h4>
+                        <ul class="list-disc pl-5">
+                            <li>ดึง <code>JobStatus</code>, <code>IngredientName</code> จาก Kepware</li>
+                            <li>ดึง <code>JobId</code> เมื่อ JobStatus=1</li>
+                            <li><strong>[New]</strong> ตรวจสอบสัญญาณ <code>Heartbeat</code> จาก PLC เพื่อยืนยันการเชื่อมต่อ</li>
+                        </ul>
+
+                        <h4 class="font-bold mt-4 text-gray-700">1.2 Flow การทำงานหลัก (JobStatus 0 &rarr; 1)</h4>
+                        <ul class="list-disc pl-5">
+                            <li>
+                                <strong>การเตรียมตัวแปร:</strong>
+                                <ul class="pl-4 text-gray-700 bg-yellow-50 p-2 rounded border border-yellow-200 mb-2">
+                                    <li>1. สร้างตัวแปร <code>_currentJobId</code> ใน C# เพื่อเก็บค่า JobId จาก Kepware ทันทีที่เริ่มงาน</li>
+                                    <li>2. <strong>ห้าม</strong> อ่านค่า JobId จาก Kepware ซ้ำระหว่าง Process ให้ใช้ค่าใน <code>_currentJobId</code> นี้ตลอดจนจบงาน</li>
+                                </ul>
+                            </li>
+                            <li>หาก <code>StatusClearRaw = 0</code> เริ่มนับเวลา <code>countTimeStartCheck</code> (ใช้ Time Delta เช็คครบ 600s)</li>
+                            <li>
+                                <strong>UPDATE DB:</strong> <code>StartTimeStemp</code> = CURRENT_TIMESTAMP 
+                                <br><span class="font-bold text-red-600">WHERE JobId = _currentJobId</span> (ใช้ตัวแปรที่เก็บไว้เช็ค Consistency)
+                            </li>
+                            <li><strong>เมื่อครบ 600 วินาที:</strong> 
+                                <ul class="list-none pl-4 text-xs font-mono bg-blue-50 p-2 rounded mt-1">
+                                    <li>- สั่งเปิดไฟกล้อง (Write Tag) &amp; Verify Status</li>
+                                    <li>- Update <code>StatusLightOpen=1</code>, <code>StatusCountStart=1</code> <span class="text-red-600 font-bold">WHERE JobId = _currentJobId</span></li>
+                                </ul>
+                            </li>
+                            <li><strong>เมื่อไฟติด:</strong> เริ่มกระบวนการ Sampling (Write & Verify)
+                                <ul class="list-none bg-gray-50 p-2 rounded mt-1 text-xs font-mono">
+                                    <li>- Loop 3 ครั้ง: Tag Sampling 1 (จับเวลา Time Delta 3s) &rarr; 0 (จับเวลา Time Delta 5s)</li>
+                                    <li>- จบแล้ว Update <code>StatusSamplingPass=1</code> <span class="text-red-600 font-bold">WHERE JobId = _currentJobId</span></li>
+                                </ul>
+                            </li>
+                            <li><strong>เมื่อ Sampling เสร็จ:</strong> สั่ง Motor สั่น (Write & Verify)
+                                <ul class="list-none bg-gray-50 p-2 rounded mt-1 text-xs font-mono">
+                                    <li>- สั่ง Motor 1 (จับเวลา Time Delta 60-120s) &rarr; 0</li>
+                                    <li>- Update <code>StatusVibratePass=1</code> <span class="text-red-600 font-bold">WHERE JobId = _currentJobId</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                        
+                        <h4 class="font-bold mt-4 text-gray-700">1.3 กระบวนการทำความสะอาด (Cleaning Process)</h4>
+                        <p>หาก <code>JobStatus = 0</code> และระบบค้าง ให้ทำ Cleaning:</p>
+                        <ul class="list-none bg-red-50 p-2 rounded mt-1 text-xs font-mono text-red-800">
+                            <li>1. Loop 3 รอบ: ถาด 1 (Time Delta 5s) &rarr; ถาด 2 (Time Delta 5s)</li>
+                            <li>2. <strong>ทำการปิดไฟกล้อง (StatusLightOpen = 0)</strong></li>
+                            <li>3. Set <code>StatusClearRaw = 1</code></li>
+                        </ul>
+
+                        <h4 class="font-bold mt-4 text-gray-700">1.4 การรีเซ็ตค่า (System Reset)</h4>
+                        <p>หาก <code>JobStatus</code> เปลี่ยนจาก 1 &rarr; 0 ให้ทำการ:</p>
+                        <ul class="list-none bg-gray-100 p-2 rounded mt-1 text-xs font-mono text-gray-600">
+                            <li>1. <strong>สั่งปิดอุปกรณ์ Hardware ทันที (Safety):</strong> Light=0, Motor=0, Tray=0</li>
+                            <li>2. <strong>Reset ค่าใน DB เป็น 0:</strong> ทุก Flags = 0 
+                                <span class="text-red-600 font-bold">WHERE JobId = _currentJobId</span> (หรือเคลียร์ของ Job ล่าสุด)
+                            </li>
+                            <li>3. <strong>เคลียร์ตัวแปร:</strong> Set <code>_currentJobId = null</code></li>
+                        </ul>
+
+                        <h4 class="font-bold mt-4 text-gray-700">1.5 System Maintenance (Housekeeping)</h4>
+                        <p>ตั้ง Schedule Task (เช่น เวลา 02:00 น.) ให้ตรวจสอบ Folder เก็บภาพและลบไฟล์ที่มีอายุเกิน 90 วัน เพื่อป้องกัน Disk เต็ม</p>
+
+                        <h4 class="font-bold mt-4 text-gray-700">1.6 การตรวจสอบสถานะเริ่มระบบ (Startup Check Logic)</h4>
+                        <p>เมื่อโปรแกรมเริ่มทำงาน (Startup) หรือ Recover หลังไฟดับ ให้ตรวจสอบ:</p>
+                        <ul class="list-disc pl-5 text-sm text-gray-600">
+                            <li>อ่านค่า <code>JobStatus</code> จาก Kepware และสถานะ Flags จาก DB</li>
+                            <li><strong>Case A (Resume):</strong> Kepware=1 และ DB มีค่าค้าง &rarr; ดึงค่า <code>_currentJobId</code> จาก DB มาใส่ตัวแปร แล้ว Resume Process</li>
+                            <li><strong>Case B (Force Reset):</strong> Kepware=0 แต่ DB ค้าง &rarr; เข้าสู่กระบวนการ Cleaning & Reset ทันที</li>
+                            <li><strong>Case C (New Job):</strong> Kepware=1 แต่ DB ว่างเปล่า &rarr; เริ่มกระบวนการ Start New Job</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="spec-section border-green-500">
+                    <h3 class="spec-title">ส่วนที่ 2: Python OpenCV Process</h3>
+                    <div class="spec-content">
+                        <ul class="list-disc pl-5">
+                            <li><strong>Condition:</strong> Status ทั้ง 4 เป็น 1 และ <code>StatusSaveImageSuccess_FromPython = 0</code></li>
+                            <li><strong>Action (Try-Catch, Stream Processing):</strong>
+                                <ul class="list-none pl-4 text-sm">
+                                    <li>- อ่านรูปภาพแบบ Stream (เพื่อประหยัด RAM)</li>
+                                    <li>- สร้างชื่อไฟล์แบบ Unique (HMx_JobId_Date_Time_GUID)</li>
+                                    <li>- <span class="text-green-600 font-bold">Success:</span> Save Binary, Update <code>StatusSaveImageSuccess=1</code> 
+                                        <span class="text-red-600 font-bold">WHERE JobId = [Python's Current JobId]</span></li>
+                                    <li>- <span class="text-red-600 font-bold">Error:</span> Update <code>StatusError_FromPython=1</code> 
+                                        <span class="text-red-600 font-bold">WHERE JobId = [Python's Current JobId]</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="spec-section border-indigo-500">
+                    <h3 class="spec-title">ส่วนที่ 3: C# Post-Processing Loop</h3>
+                    <div class="spec-content">
+                        <ul class="list-disc pl-5">
+                            <li><strong>Check 1:</strong> หาก <code>StatusError_FromPython = 1</code> &rarr; แจ้ง Alarm "Camera Error" และ Reset Process</li>
+                            <li><strong>Check 2:</strong> หาก <code>StatusSaveImageSuccess_FromPython = 1</code>
+                                <ul class="list-none pl-4">
+                                    <li>- ดึงข้อมูล Save ลง Disk (Atomic Write with Retry & Stream)</li>
+                                    <li>- ตรวจสอบไฟล์ (File.Exists)</li>
+                                    <li>- Update <code>StatusAfterCheckSaveImage = 1</code> <span class="text-red-600 font-bold">WHERE JobId = _currentJobId</span></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: NEW TECHNICAL IMPLEMENTATION -->
+        <section id="view-technical" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">
+                    <i class="fas fa-cogs mr-2 text-blue-600"></i> Technical Implementation Guide (VS2022 & Python)
+                </h2>
+
+                <!-- PART 1: C# TECH STACK -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold text-blue-800 mb-3 border-l-4 border-blue-500 pl-3">1. C# Backend (Worker Service) - Visual Studio 2022</h3>
+                    <p class="text-gray-600 text-sm mb-4">
+                        แนะนำให้พัฒนาในรูปแบบ <strong>Worker Service (.NET 8)</strong> เพื่อความเสถียรในการรันระยะยาว (Long-running process) โดยไม่ต้องพึ่งหน้าจอ Console
+                    </p>
+                    
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                            <h4 class="font-bold text-gray-700 text-sm mb-2">Core Stack (Tools & Libs)</h4>
+                            <ul class="text-xs space-y-2 text-gray-600">
+                                <li>📦 <strong>Polly:</strong> "God-tier" Resilience library. ใช้จัดการ Retry Policy (Database, File IO) และ Circuit Breaker</li>
+                                <li>📦 <strong>Dapper:</strong> Micro-ORM ที่ไวที่สุดสำหรับ SQL Server เหมาะกับการเขียน Query หนักๆ ที่ต้องการ Performance</li>
+                                <li>📦 <strong>Serilog:</strong> Structured Logging ที่ดีที่สุด บันทึก Log ลง File (Rolling File) หรือ Seq</li>
+                                <li>📦 <strong>TitaniumAS.Opc.Client / Opc.Ua.Client:</strong> สำหรับเชื่อมต่อ Kepware (ขึ้นอยู่กับว่าเป็น DA หรือ UA)</li>
+                                <li>📦 <strong>FluentScheduler / Quartz.NET:</strong> สำหรับทำ Job Housekeeping (ลบไฟล์เก่า)</li>
+                            </ul>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                            <h4 class="font-bold text-gray-700 text-sm mb-2">Technique & Patterns</h4>
+                            <ul class="text-xs space-y-2 text-gray-600">
+                                <li>🔧 <strong>BackgroundService:</strong> ใช้ Class `BackgroundService` เป็น Base หลักในการรัน Loop</li>
+                                <li>🔧 <strong>Dependency Injection (DI):</strong> ฉีด Service (Database, OPC, Logger) เข้ามาจัดการ เพื่อความสะอาดและ Test ง่าย</li>
+                                <li>🔧 <strong>Async/Await:</strong> ใช้ตลอดทั้งโปรแกรม โดยเฉพาะจุดที่ I/O Bound (DB, File, Network)</li>
+                                <li>🔧 <strong>CancellationToken:</strong> ส่ง Token ไปทุก Method เพื่อให้สั่งหยุดงานได้ทันทีเมื่อปิดโปรแกรม</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Code Simulation: C# Worker -->
+                    <div class="mt-4">
+                        <h4 class="font-bold text-gray-700 text-xs mb-1">Logic Code Simulation: C# Worker Service Structure</h4>
+                        <pre><code class="language-csharp">
+public class ParticleCheckWorker : BackgroundService
+{
+    private readonly ILogger&lt;ParticleCheckWorker&gt; _logger;
+    private readonly IOpcClient _opc;
+    private readonly IDbConnectionFactory _db;
+    
+    // Resilience Policy (Polly) - Retry 3 times with exponential backoff
+    private readonly AsyncRetryPolicy _retryPolicy = Policy
+        .Handle&lt;SqlException&gt;()
+        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try 
+            {
+                // 1. Read Kepware (Non-blocking)
+                var jobStatus = await _opc.ReadAsync("JobStatusHM4", stoppingToken);
+                
+                if (jobStatus == 1) 
+                {
+                    // 2. Main Process Logic (using Time Delta)
+                    await RunParticleCheckProcess(stoppingToken);
+                }
+                else 
+                {
+                    // 3. Reset Logic if needed
+                    await ResetSystemStateAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Critical error in main loop");
+            }
+
+            // Smart Delay (Prevent CPU spike)
+            await Task.Delay(1000, stoppingToken);
+        }
+    }
+
+    private async Task RunParticleCheckProcess(CancellationToken token)
+    {
+        // Example: DB Update with Retry
+        await _retryPolicy.ExecuteAsync(async () => {
+            using var conn = _db.CreateConnection();
+            await conn.ExecuteAsync("UPDATE ControlSave... SET ... WHERE JobId = @Id", new { Id = _currentJobId });
+        });
+        
+        // ... Time Delta Counting Logic ...
+    }
+}
+                        </code></pre>
+                    </div>
+                </div>
+
+                <!-- PART 2: PYTHON TECH STACK -->
+                <div>
+                    <h3 class="text-lg font-bold text-green-800 mb-3 border-l-4 border-green-500 pl-3">2. Python Vision (Console)</h3>
+                    <p class="text-gray-600 text-sm mb-4">
+                        เน้นความเร็วในการประมวลผลภาพ (High Throughput) และการจัดการ Resource ที่ดีเยี่ยม
+                    </p>
+
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                            <h4 class="font-bold text-gray-700 text-sm mb-2">Core Stack</h4>
+                            <ul class="text-xs space-y-2 text-gray-600">
+                                <li>📦 <strong>OpenCV (opencv-python-headless):</strong> ใช้เวอร์ชัน Headless เพื่อลด Overhead ของ GUI บน Server</li>
+                                <li>📦 <strong>NumPy:</strong> "God-tier" สำหรับ Math & Array Operation จัดการ Pixel Data ได้ไวที่สุด</li>
+                                <li>📦 <strong>PyODBC:</strong> Driver เชื่อมต่อ SQL Server ที่เสถียรและเร็วที่สุดใน Python ecosystem</li>
+                                <li>📦 <strong>Context Managers (with):</strong> ใช้ `with` statement เสมอในการเปิด DB connection หรือไฟล์ เพื่อป้องกัน Memory Leak</li>
+                            </ul>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                            <h4 class="font-bold text-gray-700 text-sm mb-2">Technique & Patterns</h4>
+                            <ul class="text-xs space-y-2 text-gray-600">
+                                <li>🔧 <strong>Binary Streaming:</strong> อ่าน/เขียนรูปภาพเป็น Bytes IO (Memory Stream) แทนการเขียนลง Disk ชั่วคราว</li>
+                                <li>🔧 <strong>Error Handshake:</strong> หาก `cv2.VideoCapture` ล้มเหลว ต้องยิง Update StatusError กลับไปที่ DB ทันที</li>
+                                <li>🔧 <strong>Environment:</strong> ใช้ Virtual Environment (`venv`) แยก Dependency ชัดเจน</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Code Simulation: Python Loop -->
+                    <div class="mt-4">
+                        <h4 class="font-bold text-gray-700 text-xs mb-1">Logic Code Simulation: Python Processing Loop</h4>
+                        <pre><code class="language-python">
+import cv2
+import pyodbc
+import numpy as np
+import time
+import logging
+
+def main_loop():
+    while True:
+        try:
+            # 1. Check DB Trigger (Polling with slight delay)
+            cursor.execute("SELECT ... FROM ControlSave... WHERE StatusVibratePass=1 AND StatusSaveImage=0")
+            row = cursor.fetchone()
+            
+            if row:
+                job_id = row.JobId
+                try:
+                    # 2. Capture Image
+                    cap = cv2.VideoCapture(0)
+                    ret, frame = cap.read()
+                    
+                    if not ret:
+                        raise Exception("Camera capture failed")
+                        
+                    # 3. Process & Compress to Memory (Not Disk)
+                    _, img_encoded = cv2.imencode('.jpg', frame)
+                    img_bytes = img_encoded.tobytes()
+                    
+                    # 4. Save Blob to DB
+                    cursor.execute("UPDATE ImageFile... SET ImageData=? WHERE ...", (img_bytes,))
+                    cursor.execute("UPDATE ControlSave... SET StatusSaveImage=1 ...")
+                    conn.commit()
+                    
+                except Exception as e:
+                    logging.error(f"Vision Error: {e}")
+                    # Error Handshake
+                    cursor.execute("UPDATE ControlSave... SET StatusError=1 WHERE JobId=?", (job_id,))
+                    conn.commit()
+            
+            time.sleep(0.5) # Prevent CPU Hogging
+            
+        except Exception as db_err:
+            logging.critical("Database connection lost, retrying...")
+            time.sleep(5) # Db Retry Backoff
+                        </code></pre>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 3: WORKFLOW SIMULATOR -->
+        <section id="view-simulator" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-indigo-500">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">จำลองการทำงาน (Interactive Workflow)</h2>
+                <p class="text-gray-600">
+                    ส่วนนี้จำลองการ Handshake ตาม Logic ที่ระบุในส่วนที่ 1 และ 2 โดยเน้นระยะเวลาหน่วงและการวนลูปที่ถูกต้อง
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-6">
+                <!-- Control Panel -->
+                <div class="lg:col-span-1 space-y-4">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                        <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">Control Panel</h3>
+                        <div class="space-y-3">
+                            <button onclick="sim_nextStep()" id="btn-next" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow transition-all flex items-center justify-center">
+                                <i class="fas fa-step-forward mr-2"></i> Next Step
+                            </button>
+                            <button onclick="sim_reset()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center">
+                                <i class="fas fa-redo mr-2"></i> Reset System
+                            </button>
+                        </div>
+                        <div class="mt-6">
+                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Current Step Description</h4>
+                            <div id="sim-description" class="text-sm text-gray-600 bg-gray-50 p-3 rounded border border-gray-200 h-32 overflow-y-auto">
+                                System Idle. Ready to start Job.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualization Panel -->
+                <div class="lg:col-span-2 bg-gray-800 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
+                    <!-- Background Grid -->
+                    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+                    <div class="relative z-10 grid grid-cols-2 gap-8 h-full">
+                        
+                        <!-- C# Controller Block -->
+                        <div id="block-csharp" class="border-2 border-blue-500 bg-gray-900 rounded-lg p-4 flex flex-col transition-all duration-300">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold text-blue-400"><i class="fas fa-microchip mr-2"></i>C# Controller</span>
+                                <span id="status-csharp" class="text-xs bg-blue-900 text-blue-200 px-2 py-1 rounded">Idle</span>
+                            </div>
+                            <div class="flex-grow space-y-2 text-xs font-mono text-gray-300">
+                                <div class="flex justify-between"><span>JobStatus (Kepware):</span> <span id="val-jobstatus" class="text-yellow-400">0</span></div>
+                                <div class="flex justify-between"><span>Wait Timer:</span> <span id="val-timer">0/600</span></div>
+                                <div class="flex justify-between"><span>Cleaning Cycle:</span> <span id="val-cleaning">None</span></div>
+                            </div>
+                            <!-- Arrow to DB -->
+                            <div class="mt-2 text-center text-gray-500"><i class="fas fa-arrow-down"></i> Reads/Writes</div>
+                        </div>
+
+                        <!-- Python Vision Block -->
+                        <div id="block-python" class="border-2 border-gray-600 bg-gray-900 rounded-lg p-4 flex flex-col opacity-50 transition-all duration-300">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold text-green-400"><i class="fas fa-eye mr-2"></i>Python Vision</span>
+                                <span id="status-python" class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">Waiting</span>
+                            </div>
+                            <div class="flex-grow space-y-2 text-xs font-mono text-gray-300">
+                                <div class="flex justify-between"><span>Camera:</span> <span id="val-cam">Standby</span></div>
+                                <div class="flex justify-between"><span>Processing:</span> <span id="val-proc">Idle</span></div>
+                            </div>
+                            <!-- Arrow to DB -->
+                            <div class="mt-2 text-center text-gray-500"><i class="fas fa-arrow-down"></i> Polling DB</div>
+                        </div>
+
+                        <!-- Database Block (Central) -->
+                        <div class="col-span-2 border-2 border-purple-500 bg-gray-900 rounded-lg p-4 mt-4">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="font-bold text-purple-400"><i class="fas fa-database mr-2"></i>Database (Handshake Table)</span>
+                                <span class="text-xs text-purple-300">Table: ControlSaveImageResultRealTime</span>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs font-mono">
+                                <div class="bg-gray-800 p-2 rounded">
+                                    <div class="text-gray-500">StatusCountStart</div>
+                                    <div id="db-flag-start" class="text-xl font-bold text-red-400">0</div>
+                                </div>
+                                <div class="bg-gray-800 p-2 rounded">
+                                    <div class="text-gray-500">StatusLightOpen</div>
+                                    <div id="db-flag-light" class="text-xl font-bold text-red-400">0</div>
+                                </div>
+                                <div class="bg-gray-800 p-2 rounded">
+                                    <div class="text-gray-500">StatusSamplingPass</div>
+                                    <div id="db-flag-sample" class="text-xl font-bold text-red-400">0</div>
+                                </div>
+                                <div class="bg-gray-800 p-2 rounded">
+                                    <div class="text-gray-500">StatusVibratePass</div>
+                                    <div id="db-flag-vibrate" class="text-xl font-bold text-red-400">0</div>
+                                </div>
+                                <div class="bg-gray-800 p-2 rounded border border-green-900">
+                                    <div class="text-green-500">SaveSuccess_Py</div>
+                                    <div id="db-flag-pysave" class="text-xl font-bold text-gray-600">0</div>
+                                </div>
+                                <div class="bg-gray-800 p-2 rounded border border-blue-900">
+                                    <div class="text-blue-500">CheckSave_C#</div>
+                                    <div id="db-flag-cscheck" class="text-xl font-bold text-gray-600">0</div>
+                                </div>
+                                <div class="bg-gray-800 p-2 rounded border border-amber-900 col-span-2 md:col-span-2">
+                                    <div class="text-amber-500">StatusClearRaw</div>
+                                    <div id="db-flag-clear" class="text-xl font-bold text-gray-600 text-center">0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: DATABASE STRUCTURE -->
+        <section id="view-database" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">โครงสร้างฐานข้อมูล (Database Schema)</h2>
+                <p class="text-gray-600">
+                    แสดงโครงสร้างตารางทั้ง 7 ตารางตามข้อกำหนด (แก้ไขชื่อ Column ให้ตรงตาม Flow ทุกตัวอักษร)
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-12 gap-6">
+                <!-- Table List -->
+                <div class="md:col-span-4 space-y-2 overflow-y-auto max-h-[600px]">
+                    <div class="text-xs font-bold text-gray-400 uppercase ml-2 mt-2 mb-1">Realtime Control</div>
+                    <button onclick="showTableDetails('ControlSaveImageResultRealTime')" class="w-full text-left p-4 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors group mb-1">
+                        <div class="font-bold text-blue-800 group-hover:text-blue-900 text-sm">ControlSaveImageResultRealTime</div>
+                        <div class="text-xs text-blue-600">Core Handshake</div>
+                    </button>
+                    <button onclick="showTableDetails('ControlPopUpOnSite')" class="w-full text-left p-4 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 transition-colors mb-1">
+                        <div class="font-bold text-gray-700 text-sm">ControlPopUpOnSite</div>
+                        <div class="text-xs text-gray-500">UI Display Status</div>
+                    </button>
+
+                    <div class="text-xs font-bold text-gray-400 uppercase ml-2 mt-3 mb-1">Image Storage</div>
+                    <button onclick="showTableDetails('ImageFileBinaryRealTime')" class="w-full text-left p-4 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 transition-colors mb-1">
+                        <div class="font-bold text-gray-700 text-sm">ImageFileBinaryRealTime</div>
+                        <div class="text-xs text-gray-500">FILESTREAM Blob</div>
+                    </button>
+                    <button onclick="showTableDetails('ImageFilePath')" class="w-full text-left p-4 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 transition-colors mb-1">
+                        <div class="font-bold text-gray-700 text-sm">ImageFilePath</div>
+                        <div class="text-xs text-gray-500">Saved File History</div>
+                    </button>
+
+                    <div class="text-xs font-bold text-gray-400 uppercase ml-2 mt-3 mb-1">Master & Reports</div>
+                    <button onclick="showTableDetails('SettingDetactPercentPass')" class="w-full text-left p-4 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 transition-colors mb-1">
+                        <div class="font-bold text-gray-700 text-sm">SettingDetactPercentPass</div>
+                        <div class="text-xs text-gray-500">Limits Configuration</div>
+                    </button>
+                    <button onclick="showTableDetails('LineMaster')" class="w-full text-left p-4 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 transition-colors mb-1">
+                        <div class="font-bold text-gray-700 text-sm">LineMaster</div>
+                        <div class="text-xs text-gray-500">Production Line Info</div>
+                    </button>
+                    <button onclick="showTableDetails('ReportCheckParticleSizeHM')" class="w-full text-left p-4 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 transition-colors mb-1">
+                        <div class="font-bold text-gray-700 text-sm">ReportCheckParticleSizeHM</div>
+                        <div class="text-xs text-gray-500">Final Report Data</div>
+                    </button>
+                </div>
+
+                <!-- Table Details -->
+                <div class="md:col-span-8 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-fit">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                        <h3 id="table-title" class="text-lg font-bold text-gray-800">ControlSaveImageResultRealTime</h3>
+                        <span id="table-badge" class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-bold">Realtime</span>
+                    </div>
+                    <div class="p-0 overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+                                <tr>
+                                    <th class="px-6 py-3 w-1/3">Column Name</th>
+                                    <th class="px-6 py-3 w-1/4">Type</th>
+                                    <th class="px-6 py-3">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body" class="divide-y divide-gray-200">
+                                <!-- Dynamic Content Here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: TIME ANALYSIS (NEW) -->
+        <section id="view-timeanalysis" class="hidden space-y-6 animate-fade-in">
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border-l-4 border-green-500">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">วิเคราะห์เวลาการทำงาน (Time Analysis)</h2>
+                <p class="text-gray-600">
+                    การคำนวณเวลาที่ใช้ในแต่ละขั้นตอนของ Process การตรวจสอบ เพื่อประเมินประสิทธิภาพและ Cycle Time รวม
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-4 gap-6">
+                <div class="time-card">
+                    <div class="time-label">Wait Time (Fixed)</div>
+                    <div class="time-val">600 <span class="text-sm text-gray-400">sec</span></div>
+                    <div class="text-xs text-gray-500">Standard Delay</div>
+                </div>
+                <div class="time-card">
+                    <div class="time-label">Sampling Process</div>
+                    <div class="time-val">24 <span class="text-sm text-gray-400">sec</span></div>
+                    <div class="text-xs text-gray-500">(3s ON + 5s OFF) x 3 Loop</div>
+                </div>
+                <div class="time-card">
+                    <div class="time-label">Vibration (Avg)</div>
+                    <div class="time-val">90 <span class="text-sm text-gray-400">sec</span></div>
+                    <div class="text-xs text-gray-500">Range: 60 - 120s</div>
+                </div>
+                <div class="time-card bg-blue-50 border-blue-200">
+                    <div class="time-label text-blue-700">Total Cycle Time</div>
+                    <div class="time-val text-blue-800">~720 <span class="text-sm text-blue-400">sec</span></div>
+                    <div class="text-xs text-blue-600">Approx. 12 Minutes/Job</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <h3 class="font-bold text-gray-800 mb-4">Detailed Breakdown</h3>
+                <div class="space-y-4">
+                    <!-- Progress Bars -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="font-bold text-gray-600">Wait (600s)</span>
+                            <span class="text-gray-400">83%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-gray-500 h-2.5 rounded-full" style="width: 83%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="font-bold text-gray-600">Vibration (Max 120s)</span>
+                            <span class="text-gray-400">16%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-amber-500 h-2.5 rounded-full" style="width: 16%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="font-bold text-gray-600">Sampling (24s)</span>
+                            <span class="text-gray-400">3%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-blue-500 h-2.5 rounded-full" style="width: 3%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="font-bold text-gray-600">Processing & IO (~5s)</span>
+                            <span class="text-gray-400">< 1%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-green-500 h-2.5 rounded-full" style="width: 1%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t border-gray-100 grid md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-700">Estimated Throughput</h4>
+                        <ul class="text-sm text-gray-600 mt-2 space-y-1">
+                            <li><i class="fas fa-check text-green-500 mr-2"></i><strong>Jobs per Hour:</strong> ~5 Jobs</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i><strong>Jobs per 8h Shift:</strong> ~40 Jobs</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-700">Efficiency Note</h4>
+                        <p class="text-xs text-gray-500 mt-2">
+                            เวลาส่วนใหญ่ (83%) ใช้ไปกับการรอ (Wait 600s) ซึ่งเป็นค่าคงที่ของกระบวนการผลิต การปรับปรุงประสิทธิภาพโค้ด (Software Optimization) จะส่งผลต่อ Cycle Time รวมเพียงเล็กน้อย (<1%) แต่มีความสำคัญต่อความถูกต้องของข้อมูล
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-8 py-6">
+        <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
+            <p>&copy; 2024 Particle Size Check System Dashboard.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Navigation Logic ---
+        function switchTab(tabId) {
+            ['overview', 'variables', 'fullspec', 'simulator', 'database', 'timeanalysis', 'technical'].forEach(id => {
+                const view = document.getElementById(`view-${id}`);
+                const tab = document.getElementById(`tab-${id}`);
+                if (view && tab) {
+                    view.classList.add('hidden');
+                    tab.classList.replace('tab-active', 'tab-inactive');
+                }
+            });
+
+            const targetView = document.getElementById(`view-${tabId}`);
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            
+            if (targetView && targetTab) {
+                targetView.classList.remove('hidden');
+                targetTab.classList.replace('tab-inactive', 'tab-active');
+            }
+        }
+
+        // --- Database Logic ---
+        const tableData = {
+            'ControlSaveImageResultRealTime': [
+                { name: 'LineId', type: 'NVARCHAR(8)', desc: 'PK (HM4, HM5, HM6)' },
+                { name: 'JobId', type: 'NVARCHAR(16)', desc: 'From Kepware when JobStatus=1' },
+                { name: 'StartTimeStemp', type: 'DATETIME', desc: 'Timestamp (Note: spelling)' },
+                { name: 'StatusCountStart_FromC#', type: 'BIT', desc: '1 = 600s reached' },
+                { name: 'StatusLightOpen_FromC#', type: 'BIT', desc: '1 = Light ON' },
+                { name: 'StatusSamplingPass_FromC#', type: 'BIT', desc: '1 = Sampling Loop Done' },
+                { name: 'StatusVibratePass_FromC#', type: 'BIT', desc: '1 = Vibration Done' },
+                { name: 'StatusSaveImageSuccess_FromPython', type: 'BIT', desc: 'Python Success Flag' },
+                { name: 'StatusAfterCheckSaveImage_FromC#', type: 'BIT', desc: 'C# File Save Flag' },
+                { name: 'StatusClearRaw', type: 'BIT', desc: '1 = Cleaning Done' },
+                { name: 'StatusError_FromPython', type: 'BIT', desc: '1 = Camera/Process Error' }
+            ],
+            'ControlPopUpOnSite': [
+                { name: 'LineName', type: 'NVARCHAR(8)', desc: 'Line ID' },
+                { name: 'JobId', type: 'NVARCHAR(16)', desc: 'Job ID' },
+                { name: 'ImagePath', type: 'NVARCHAR(512)', desc: 'Display Path' },
+                { name: 'ResultPercent', type: 'REAL', desc: 'Calculated %' },
+                { name: 'StatusShowPopup', type: 'BIT', desc: '1 = Show UI' },
+                { name: 'LastTimeUpdate', type: 'DATETIME', desc: 'Update Time' }
+            ],
+            'ImageFileBinaryRealTime': [
+                { name: 'LineName', type: 'NVARCHAR(8)', desc: 'Line ID' },
+                { name: 'JobId', type: 'NVARCHAR(16)', desc: 'Job ID' },
+                { name: 'ImageName', type: 'NVARCHAR(128)', desc: 'HMx_JobId_Date_Time' },
+                { name: 'ImageData', type: 'VARBINARY(MAX)', desc: 'FILESTREAM Data' },
+                { name: 'ImageIsUse', type: 'BIT', desc: '0=New, 1=Done' }
+            ],
+            'SettingDetactPercentPass': [
+                { name: 'SettingId', type: 'INT IDENTITY(1,1)', desc: 'PK' },
+                { name: 'LimitPassPercent', type: 'REAL', desc: 'Pass/Fail Threshold' },
+                { name: 'StatusDetail', type: 'NVARCHAR(16)', desc: 'Desc' }
+            ],
+            'LineMaster': [
+                { name: 'LineId', type: 'NVARCHAR(4)', desc: 'PK' },
+                { name: 'LineName', type: 'NVARCHAR(8)', desc: 'Display Name' },
+                { name: 'LineDetail', type: 'NVARCHAR(128)', desc: 'Info' }
+            ],
+            'ImageFilePath': [
+                { name: 'ImageId', type: 'INT IDENTITY(1,1)', desc: 'PK' },
+                { name: 'JobId', type: 'NVARCHAR(16)', desc: 'Job ID' },
+                { name: 'LineId', type: 'NVARCHAR(4)', desc: 'Line ID' },
+                { name: 'CreateAt', type: 'DATETIME', desc: 'TimeStemp' },
+                { name: 'ImageName', type: 'NVARCHAR(128)', desc: 'Filename' },
+                { name: 'ImagePath', type: 'NVARCHAR(512)', desc: 'Full Storage Path' },
+                { name: 'RoundCheck', type: 'INT', desc: 'Count' }
+            ],
+            'ReportCheckParticleSizeHM': [
+                { name: 'LineName', type: 'NVARCHAR(8)', desc: 'Line ID' },
+                { name: 'JobId', type: 'NVARCHAR(16)', desc: 'Job ID' },
+                { name: 'IngredientName', type: 'NVARCHAR(256)', desc: 'Material Name' },
+                { name: 'CreateAt', type: 'DATETIME', desc: 'Report Timestamp' },
+                { name: 'ResultPercent', type: 'REAL', desc: 'Final Result' },
+                { name: 'StatusDetail', type: 'NVARCHAR(256)', desc: 'Pass/Fail Detail' },
+                { name: 'ImageID', type: 'INT', desc: 'Ref Image ID' }
+            ]
+        };
+
+        function showTableDetails(tableName) {
+            const data = tableData[tableName];
+            const tbody = document.getElementById('table-body');
+            document.getElementById('table-title').innerText = tableName;
+            
+            // Set badge color based on group
+            const badge = document.getElementById('table-badge');
+            if (['ControlSaveImageResultRealTime', 'ControlPopUpOnSite'].includes(tableName)) {
+                badge.innerText = 'Realtime';
+                badge.className = "bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-bold";
+            } else if (['ImageFileBinaryRealTime', 'ImageFilePath'].includes(tableName)) {
+                badge.innerText = 'Image Storage';
+                badge.className = "bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-bold";
+            } else {
+                badge.innerText = 'Master / Report';
+                badge.className = "bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full font-bold";
+            }
+            
+            tbody.innerHTML = '';
+            data.forEach(row => {
+                tbody.innerHTML += `
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <td class="px-6 py-4 font-medium text-gray-900 font-mono text-xs">${row.name}</td>
+                        <td class="px-6 py-4 text-blue-600 font-mono text-xs">${row.type}</td>
+                        <td class="px-6 py-4 text-gray-500 text-xs">${row.desc}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- Simulator Logic ---
+        let currentStep = 0;
+        const steps = [
+            { id: 'idle', desc: 'System Idle. Waiting for JobStatus 0->1.', cState: 'Idle', pState: 'Waiting', jobStatus: 0, clean: 'None', flags: [0,0,0,0,0,0,0] },
+            { id: 'start', desc: 'JobStatus=1. StartTimeStemp Updated. Loop +1 sec.', cState: 'Counting (0/600)', pState: 'Waiting', jobStatus: 1, clean: 'None', flags: [1,0,0,0,0,0,0] },
+            { id: 'count', desc: '600s Elapsed. Update StatusCountStart=1.', cState: 'Counting (600/600)', pState: 'Waiting', jobStatus: 1, clean: 'None', flags: [1,0,0,0,0,0,0] },
+            { id: 'light', desc: 'Open Light. Update StatusLightOpen=1.', cState: 'Light ON', pState: 'Waiting', jobStatus: 1, clean: 'None', flags: [1,1,0,0,0,0,0] },
+            
+            // Exact Sampling Logic: Tag=1 (3s) -> Tag=0 (5s) -> Loop 3x
+            { id: 'sample_1_on', desc: 'Sampling Loop 1: Tag=1 (Wait 3s)', cState: 'Sample 1 ON', pState: 'Waiting', jobStatus: 1, clean: 'None', flags: [1,1,0,0,0,0,0] },
+            { id: 'sample_1_off', desc: 'Sampling Loop 1: Tag=0 (Wait 5s)', cState: 'Sample 1 OFF', pState: 'Waiting', jobStatus: 1, clean: 'None', flags: [1,1,0,0,0,0,0] },
+            { id: 'sample_2_on', desc: 'Sampling Loop 2: Tag=1 (Wait 3s)', cState: 'Sample 2 ON', pState: 'Waiting', jobStatus: 1, clean: 'None', flags: [1,1,0,0,0,0,0] },
+            { id: 'sample_2_off', desc: 'Sampling Loop 2: Tag=0 (Wait 5s)', cState: 'Sample 2 OFF', pState: 'Waiting', jobStatus: 1, clean: 'None', flags: [1,1,0,0,0,0,0] },
+            { id: 'sample_3_on', desc: 'Sampling Loop 3: Tag=1 (Wait 3s)', cState: 'Sample 3 ON', pState: 'Waiting', jobStatus: 1, clean: 'None', flags: [1,1,0,0,0,0,0] },
+            { id: 'sample_3_off', desc: 'Sampling Loop 3: Tag=0 (Wait 5s)', cState: 'Sample 3 OFF', pState: 'Waiting', jobStatus: 1, clean: 'None', flags: [1,1,0,0,0,0,0] },
+            
+            { id: 'sample_done', desc: 'Sampling Complete. Update StatusSamplingPass = 1.', cState: 'Sampling Done', pState: 'Waiting', jobStatus: 1, clean: 'None', flags: [1,1,1,0,0,0,0] },
+            { id: 'vibrate', desc: 'Motor Vibrate = 1 (60-120s) -> 0. Update StatusVibratePass=1.', cState: 'Vibrating', pState: 'Waiting', jobStatus: 1, clean: 'None', flags: [1,1,1,1,0,0,0] },
+            
+            { id: 'py_detect', desc: 'Python Detects all flags. Capturing...', cState: 'Wait Watchdog', pState: 'Capturing', jobStatus: 1, clean: 'None', flags: [1,1,1,1,0,0,0] },
+            { id: 'py_save', desc: 'Python Saved Binary. Update StatusSaveImageSuccess=1.', cState: 'Wait Watchdog', pState: 'Saved', jobStatus: 1, clean: 'None', flags: [1,1,1,1,1,0,0] },
+            { id: 'cs_save', desc: 'C# Saves to Disk (Atomic). Update StatusAfterCheck=1.', cState: 'Saving File', pState: 'Idle', jobStatus: 1, clean: 'None', flags: [1,1,1,1,1,1,0] },
+            
+            // Popup Trigger Step
+            { id: 'popup', desc: 'C# Show Popup On-Site (StatusShowPopup=1). Waiting for Job End.', cState: 'Show Popup', pState: 'Idle', jobStatus: 1, clean: 'None', flags: [1,1,1,1,1,1,0] },
+
+            // Cleaning: Tray 1 (5s) -> 0 -> Tray 2 (5s) -> 0 -> Loop 3x
+            { id: 'job_end', desc: 'JobStatus=0. Start Cleaning.', cState: 'Cleaning Start', pState: 'Idle', jobStatus: 0, clean: 'Pending', flags: [1,1,1,1,1,1,0] },
+            
+            { id: 'clean_1_t1', desc: 'Clean Loop 1: Tray 1=1 (5s) -> 0', cState: 'Clean 1 T1', pState: 'Idle', jobStatus: 0, clean: 'L1: Tray1', flags: [1,1,1,1,1,1,0] },
+            { id: 'clean_1_t2', desc: 'Clean Loop 1: Tray 2=1 (5s) -> 0', cState: 'Clean 1 T2', pState: 'Idle', jobStatus: 0, clean: 'L1: Tray2', flags: [1,1,1,1,1,1,0] },
+            { id: 'clean_2_t1', desc: 'Clean Loop 2: Tray 1=1 (5s) -> 0', cState: 'Clean 2 T1', pState: 'Idle', jobStatus: 0, clean: 'L2: Tray1', flags: [1,1,1,1,1,1,0] },
+            { id: 'clean_2_t2', desc: 'Clean Loop 2: Tray 2=1 (5s) -> 0', cState: 'Clean 2 T2', pState: 'Idle', jobStatus: 0, clean: 'L2: Tray2', flags: [1,1,1,1,1,1,0] },
+            { id: 'clean_3_t1', desc: 'Clean Loop 3: Tray 1=1 (5s) -> 0', cState: 'Clean 3 T1', pState: 'Idle', jobStatus: 0, clean: 'L3: Tray1', flags: [1,1,1,1,1,1,0] },
+            { id: 'clean_3_t2', desc: 'Clean Loop 3: Tray 2=1 (5s) -> 0', cState: 'Clean 3 T2', pState: 'Idle', jobStatus: 0, clean: 'L3: Tray2', flags: [1,1,1,1,1,1,0] },
+
+            { id: 'clean_done', desc: 'Cleaning Complete. Set StatusClearRaw = 1.', cState: 'Clean Done', pState: 'Idle', jobStatus: 0, clean: 'Done', flags: [1,1,1,1,1,1,1] },
+            { id: 'light_off_final', desc: 'Turn Light OFF. Update StatusLightOpen = 0.', cState: 'Light OFF', pState: 'Idle', jobStatus: 0, clean: 'Done', flags: [1,0,1,1,1,1,1] },
+            { id: 'reset_all', desc: 'Safety Reset: Hardware Tags=0 & DB Flags=0.', cState: 'Resetting', pState: 'Idle', jobStatus: 0, clean: 'Done', flags: [0,0,0,0,0,0,0] }
+        ];
+
+        function updateUI(step) {
+            const log = document.getElementById('sim-description');
+            log.innerHTML += `<div class="mb-1 text-xs border-b border-gray-100 pb-1">Step ${currentStep}: ${step.desc}</div>`;
+            log.scrollTop = log.scrollHeight;
+
+            document.getElementById('status-csharp').innerText = step.cState;
+            document.getElementById('val-jobstatus').innerText = step.jobStatus;
+            document.getElementById('val-cleaning').innerText = step.clean;
+            
+            document.getElementById('block-csharp').className = step.cState === 'Idle' ? 
+                'border-2 border-blue-500 bg-gray-900 rounded-lg p-4 flex flex-col transition-all duration-300' : 
+                'border-2 border-blue-400 bg-blue-900 rounded-lg p-4 flex flex-col shadow-lg scale-105 transition-all duration-300';
+            
+            document.getElementById('status-python').innerText = step.pState;
+            document.getElementById('block-python').style.opacity = (step.pState === 'Waiting' || step.pState === 'Idle') ? '0.5' : '1';
+            
+            const flagIds = ['db-flag-start', 'db-flag-light', 'db-flag-sample', 'db-flag-vibrate', 'db-flag-pysave', 'db-flag-cscheck', 'db-flag-clear'];
+            step.flags.forEach((val, idx) => {
+                const el = document.getElementById(flagIds[idx]);
+                el.innerText = val;
+                el.className = val === 1 ? 'text-xl font-bold text-green-400 animate-pulse' : 'text-xl font-bold text-red-400';
+            });
+
+            // POPUP LOGIC: Trigger when step is 'popup' (StatusShowPopup=1)
+            if (step.id === 'popup') {
+                showPopup();
+            }
+        }
+
+        // Popup Functions
+        function showPopup() {
+            // Simulate data binding from 'ControlPopUpOnSite' table
+            const simulatedData = {
+                lineName: 'HM4',
+                percent: '3.31%',
+                status: 'Pass'
+            };
+
+            // Bind Data
+            document.getElementById('popup-line-name').innerText = simulatedData.lineName;
+            document.getElementById('popup-percent-val').innerText = simulatedData.percent;
+            
+            // Show Overlay
+            const overlay = document.getElementById('onsite-popup-overlay');
+            overlay.classList.remove('hidden');
+            
+            // Simulate Image Loading
+            setTimeout(() => {
+                document.getElementById('popup-img-placeholder').classList.add('hidden');
+                document.getElementById('popup-real-img').classList.remove('hidden');
+            }, 1000);
+        }
+
+        function closePopup() {
+            const overlay = document.getElementById('onsite-popup-overlay');
+            overlay.classList.add('hidden');
+            // Reset image state for next show
+            document.getElementById('popup-img-placeholder').classList.remove('hidden');
+            document.getElementById('popup-real-img').classList.add('hidden');
+        }
+
+        function sim_nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateUI(steps[currentStep]);
+            } else {
+                alert("Cycle Complete. Resetting...");
+                sim_reset();
+            }
+        }
+
+        function sim_reset() {
+            currentStep = 0;
+            document.getElementById('sim-description').innerHTML = 'System Reset. Ready.';
+            updateUI(steps[0]);
+        }
+
+        // Init
+        sim_reset();
+        showTableDetails('ControlSaveImageResultRealTime');
+    </script>
+</body>
+</html>
